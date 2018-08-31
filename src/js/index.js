@@ -6,7 +6,6 @@ let VSHEADER_SOURCE =
     `attribute vec4 a_Position;
     void main(){
     gl_Position = a_Position;
-    gl_PointSize = 10.0;
     }
     `;
 let FSHEADER_SOURCE =
@@ -34,22 +33,29 @@ function main() {
         console.error("初始化着色器失败");
         return
     }
+    let n=initVertexBuffers(gl);
+    if(n<0){
+        console.error("创造顶点失败");
+        return
+    }
 
-    let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
     let u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
 
-    canvas.onmousedown = function (ev) {
-        click(ev, gl, canvas, a_Position, u_FragColor);
-    };
+    // canvas.onmousedown = function (ev) {
+    //     click(ev, gl, canvas, a_Position, u_FragColor);
+    // };
     //设置背景色
     gl.clearColor(0.0, 0.0, 0.0, 1);
     //设置缓冲区颜色
     gl.clear(gl.COLOR_BUFFER_BIT);
+    let color=[1.0,0.0,0.0,1.0];
+    gl.uniform4f(u_FragColor,...color);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
 }
 
 
 let points = [];//鼠标点数组
-let colors = [];
+// let colors = [];
 
 function click(ev, gl, canvas, a_Position, u_FragColor) {
     //屏幕坐标系转WebGL坐标系
@@ -79,6 +85,29 @@ function click(ev, gl, canvas, a_Position, u_FragColor) {
 
 }
 
+function initVertexBuffers(gl) {
+    let vertices=new Float32Array([0.0,0.5,0.5,0.5,0.5,-0.5,0,-0.5]);
+    let n=4;
+    //创建缓冲区对象
+    let vertexBuffer=gl.createBuffer();
+    if(!vertexBuffer){
+        console.log("创建缓冲区失败");
+        return -1;
+    }
+    //将缓冲区绑定到目标
+    gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+    //向缓冲区写入数据
+    gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);
+    //将缓冲区对象分配给a_Position
+    let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    gl.vertexAttribPointer(a_Position,2,gl.FLOAT,false,0,0);
+    //连接a_Position与分配的缓冲区对象
+    gl.enableVertexAttribArray(a_Position);
+
+    return n;
+
+}
+
 /**
  * 设置画布全屏
  * @param canvas
@@ -87,4 +116,5 @@ function initCanvas(canvas) {
     canvas.width = document.documentElement.clientWidth;
     canvas.height = document.documentElement.clientHeight;
 }
+
 
